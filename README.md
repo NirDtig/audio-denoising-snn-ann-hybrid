@@ -118,7 +118,7 @@ For each noisy-clean audio pair:
 
 ## Spectral Mask Estimation
 
-The hybrid network first projects the input spectral features to a higher-dimensional representation and processes them using two SNN layers.
+The hybrid network first projects the input spectral features to a higher-dimensional representation and processes them using two SNN layer blocks.
 
 The resulting representation is passed through fully connected layers and a sigmoid activation to produce the spectral mask:
 
