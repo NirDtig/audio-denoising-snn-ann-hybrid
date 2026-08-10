@@ -568,6 +568,8 @@ This project builds upon existing open-source implementations and research.
 
 The baseline speech-enhancement architecture is based on the **NSNet2** implementation by Noah Zhy.
 
+https://github.com/noahzhy/NSNet2
+
 NSNet2 served as the starting point for the speech-enhancement architecture used in this project. The contribution of this project was to investigate replacing its recurrent processing components with spiking neural network layers and evaluate different spiking architectures.
 
 ### SpArch
@@ -575,6 +577,8 @@ NSNet2 served as the starting point for the speech-enhancement architecture used
 The underlying SNN implementation and neuron models are based on **SpArch (Spiking Architectures for Speech Technology)** from the Idiap Research Institute.
 
 The original SpArch implementation is **not claimed as original work** in this repository.
+
+https://github.com/idiap/sparch/tree/main
 
 The contribution of this project was the **application and experimental investigation of SNNs within an NSNet2-based speech-enhancement system**, including:
 
