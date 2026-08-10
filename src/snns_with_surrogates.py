@@ -4,11 +4,10 @@
 # Recreated / patched version of sparch's models/snns.py to support the
 # experiments described in the thesis:
 #
-#   Experiment 1: swap GRU -> {LIF, adLIF, RLIF, RadLIF}          [original file already supports this]
+#   Experiment 1: swap GRU -> {LIF, adLIF, RLIF, RadLIF}          
 #   Experiment 2: compare surrogate gradients {boxcar, exponential,
-#                 gaussian, multigaussian}                         [NEW: added here]
-#   Experiment 3: sweep spiking threshold {0.05, 1, 5, 10}         [original file already supports this
-#                                                                    via the `threshold` kwarg]
+#                 gaussian, multigaussian}                        
+#   Experiment 3: sweep spiking threshold {0.05, 1, 5, 10}
 #
 # The only functional change vs. the original file is a new `surrogate`
 # argument on SNN and on every *Layer class, which selects which
