@@ -4,7 +4,7 @@ This repository contains the implementation of my **Dual Degree Project (DDP) at
 
 > **Audio Denoising using Spiking Neural Networks**
 
-The project investigates the use of **Spiking Neural Networks (SNNs)** for speech enhancement by replacing the recurrent components of an **NSNet2-style speech enhancement architecture** with biologically inspired spiking neuron models.
+The project investigates the use of **Spiking Neural Networks (SNNs)** for speech enhancement by replacing the recurrent components of an **NSNet2-based speech enhancement architecture** with biologically inspired spiking neuron models.
 
 Multiple spiking neuron models were investigated as part of the project:
 
@@ -13,7 +13,7 @@ Multiple spiking neuron models were investigated as part of the project:
 * **Adaptive Leaky Integrate-and-Fire (adLIF)**
 * **Recurrent Adaptive Leaky Integrate-and-Fire (RadLIF)**
 
-The final implementation in this repository uses **RadLIF** SNN layers within the NSNet2-style hybrid architecture.
+The final implementation in this repository uses **RadLIF** SNN layers within the NSNet2-based hybrid architecture.
 
 ---
 
@@ -31,7 +31,7 @@ Noisy Audio
 Log Power Spectrum
      │
      ▼
-NSNet2-style Hybrid Network
+NSNet2-based Hybrid Network
      │
      ├── Linear Projection
      │
@@ -63,7 +63,7 @@ The model operates in the time-frequency domain and predicts a spectral mask tha
 
 ## Architecture
 
-The model follows an **NSNet2-style speech enhancement architecture**.
+The project uses an **NSNet2-based speech enhancement architecture** as the starting point.
 
 The recurrent processing component is replaced with SNN layers. The final implementation contains two SNN blocks followed by fully connected layers for spectral-mask estimation.
 
@@ -229,7 +229,7 @@ for each training epoch.
 ```text
 audio-denoising-snn/
 │
-├── audio_denoising_thesis_faithful_clean.ipynb
+├── audio_denoising_thesis_faithful_clean_no_pesq.ipynb
 └── README.md
 ```
 
@@ -237,8 +237,8 @@ The notebook contains the implementation of:
 
 * Audio data loading
 * STFT preprocessing
+* NSNet2-based model
 * SNN model construction
-* NSNet2-style hybrid architecture
 * Spectral-mask estimation
 * Compressed Complex Loss
 * Model training
@@ -250,25 +250,35 @@ The notebook contains the implementation of:
 
 ## Code Attribution
 
-The SNN components used in this project are based on the **SpArch** framework developed by the **Idiap Research Institute**.
+This project builds upon the following open-source implementations and research:
 
-**SpArch — Spiking Architectures for Speech Technology**
+### NSNet2
 
-[SpArch GitHub Repository](https://github.com/idiap/sparch?utm_source=chatgpt.com)
+The baseline speech-enhancement architecture is based on the **NSNet2** implementation by Noah Zhy:
 
-The framework provides the `SNN` implementation and the spiking neuron models used in this project.
+[NSNet2 — GitHub](https://github.com/noahzhy/NSNet2?utm_source=chatgpt.com)
 
-The SNN framework and underlying neuron implementations are **not claimed as original work in this repository**. The project contribution is the investigation and integration of different SNN neuron models into an NSNet2-style audio-denoising pipeline.
+The repository provides an unofficial PyTorch/TensorFlow implementation of NSNet2 and notes that its model is based on the NSNet2 baseline from the DNS Challenge.
 
-Please refer to the original SpArch repository for its license and attribution requirements.
+The NSNet2 implementation served as the starting point for the speech-enhancement architecture used in this project. The project contribution was to investigate replacing its recurrent processing with spiking neural network layers.
+
+### SpArch
+
+The SNN components and spiking neuron models used in this project are based on **SpArch (Spiking Architectures for Speech Technology)** from the Idiap Research Institute:
+
+[SpArch — GitHub](https://github.com/idiap/sparch?utm_source=chatgpt.com)
+
+SpArch provides implementations of the four neuron types investigated in this project: **LIF, RLIF, adLIF, and RadLIF**.
+
+The underlying NSNet2 and SpArch implementations are **not claimed as original work in this repository**. The project contribution is the investigation and integration of different SNN neuron models into an NSNet2-based audio-denoising pipeline.
+
+Please refer to the respective upstream repositories for their original implementations, licenses, and attribution requirements.
 
 ---
 
 ## Notes
 
 The original implementation was developed in Google Colab.
-
-The repository version contains the thesis implementation with development-time commented-out material removed, while preserving the executable model, training configuration, and evaluation pipeline.
 
 The dataset paths in the notebook refer to local/Colab storage and therefore need to be modified when running the notebook in another environment.
 
