@@ -20,7 +20,7 @@ The objective of this project was to investigate whether spiking neural networks
 
 The project uses an **NSNet2-based architecture** as the starting point and replaces its recurrent processing components with spiking neural network layers.
 
-The overall processing pipeline is:
+The overall speech-enhancement pipeline is:
 
 ```text
 Noisy Audio
@@ -286,10 +286,13 @@ The main findings of the project were:
 
 # Repository Contents and Code Organization
 
-The repository separates the **main speech-enhancement implementation**, the **SNN implementation**, and the **surrogate-gradient definitions**.
+The repository contains two reference notebooks at the root level and the modified experimental implementation under the `src/` directory.
 
 ```text
 audio-denoising-snn/
+│
+├── audio_denoising_snn.ipynb
+├── audio_denoising_thesis_faithful_clean.ipynb
 │
 ├── src/
 │   ├── audio_denoising_snn_adLIF_exponential_threshold5_.ipynb
@@ -299,28 +302,60 @@ audio-denoising-snn/
 └── README.md
 ```
 
-### 1. `audio_denoising_snn_adLIF_exponential_threshold5_.ipynb`
+### `audio_denoising_snn.ipynb`
 
-**Purpose:** Main end-to-end implementation of the audio-denoising system.
+**Purpose:** Original/reference implementation of the audio-denoising system.
 
-This notebook is the primary entry point for the project. It brings together:
+This notebook contains the NSNet2-based speech-enhancement pipeline and uses the **SpArch (`sparch`) library** for the underlying SNN implementation.
 
-* audio data loading
+It contains the main workflow for:
+
+* loading noisy and clean speech
 * STFT preprocessing
-* logarithmic power-spectrum features
+* logarithmic power-spectrum representation
 * NSNet2-based hybrid architecture
-* SNN layers
-* spectral-mask prediction
+* SNN-based processing
+* spectral-mask estimation
 * compressed complex loss
 * model training
 * validation
-* waveform reconstruction using inverse STFT
+* waveform reconstruction
 * SNR evaluation
 * SI-SDR evaluation
 
-The current notebook is configured as a **specific reproducible experiment using adLIF neurons, an Exponential surrogate gradient, and a firing threshold of 5.0**.
+The SNN implementation in this notebook comes from the SpArch library and is **not a custom SNN implementation developed in this project**.
 
-The experimental configuration is:
+**Intention:** provide the original/reference implementation from which the project was developed.
+
+---
+
+### `audio_denoising_thesis_faithful_clean.ipynb`
+
+**Purpose:** Clean/faithful version of the reference implementation.
+
+This notebook is a similar, cleaned-up version of `audio_denoising_snn.ipynb` that represents the implementation and workflow described in the thesis.
+
+It contains the same major speech-enhancement components:
+
+* STFT-based audio representation
+* NSNet2-based architecture
+* SNN processing
+* spectral-mask estimation
+* compressed complex loss
+* training and validation
+* SNR and SI-SDR evaluation
+
+The underlying SNN implementation is still based on the SpArch framework.
+
+**Intention:** provide a cleaner and easier-to-inspect version of the implementation corresponding to the thesis.
+
+---
+
+### `src/audio_denoising_snn_adLIF_exponential_threshold5_.ipynb`
+
+**Purpose:** Reproducible example of a specific experimental configuration.
+
+This notebook uses the modified SNN implementation in `src/snns_with_surrogates.py` and explicitly configures:
 
 ```python
 NEURON_TYPE = "adLIF"
@@ -328,17 +363,31 @@ SURROGATE = "exponential"
 THRESHOLD = 5.0
 ```
 
-**Intention:** provide a complete, inspectable end-to-end implementation of the speech-enhancement system and a concrete example of one experimental configuration.
+Thus, this notebook represents:
+
+```text
+Neuron      : adLIF
+Surrogate   : Exponential
+Threshold   : 5.0
+```
+
+The notebook retains the NSNet2-based speech-enhancement pipeline while using the configurable SNN implementation provided in `snns_with_surrogates.py`.
+
+**Intention:** provide a concrete, reproducible example of how the experimental parameters investigated in the thesis can be configured in the model.
 
 ---
 
-### 2. `snns_with_surrogates.py`
+### `src/snns_with_surrogates.py`
 
-**Purpose:** SNN implementation with configurable neuron type, surrogate gradient, and firing threshold.
+**Purpose:** Modified SNN implementation that exposes the experimental parameters used in the thesis.
 
-This file contains the SNN layers used by the speech-enhancement model and exposes the experimental choices as explicit configuration parameters.
+The underlying SNN implementation is based on the SpArch framework. This file modifies the SNN interface so that the following can be specified explicitly:
 
-The supported neuron models are:
+* neuron type
+* surrogate-gradient function
+* firing threshold
+
+The supported neuron models include:
 
 ```text
 LIF
@@ -346,8 +395,6 @@ RLIF
 adLIF
 RadLIF
 ```
-
-The SNN can also select a surrogate gradient and firing threshold for a particular experiment.
 
 For example:
 
@@ -357,17 +404,17 @@ surrogate = "exponential"
 threshold = 5.0
 ```
 
-These parameters are passed into the SNN layers so that the same architecture can be evaluated under different experimental settings.
+These parameters are passed into the SNN layers, allowing the same speech-enhancement architecture to be evaluated under different experimental configurations.
 
-**Intention:** keep the SNN implementation modular so that the neuron dynamics and training configuration can be changed without rewriting the NSNet2-based speech-enhancement architecture.
+**Intention:** provide the configurable SNN implementation required for the experimental studies in the thesis, while building upon the existing SpArch implementation rather than claiming the underlying SNN architecture as original work.
 
 ---
 
-### 3. `surrogate_gradients.py`
+### `src/surrogate_gradients.py`
 
-**Purpose:** Defines the surrogate-gradient functions used for training the spiking neurons.
+**Purpose:** Implements the surrogate-gradient functions required for the surrogate-gradient experiments.
 
-The forward spike-generation function is non-differentiable. During backpropagation, surrogate gradients provide an approximate derivative so that gradient-based optimization can be used.
+The hard spike-generation function used by spiking neurons is non-differentiable. During backpropagation, a surrogate gradient is substituted for its true derivative.
 
 This file implements:
 
@@ -376,67 +423,76 @@ This file implements:
 * **Gaussian**
 * **Multi-Gaussian**
 
-All four use the same hard spike in the forward pass and differ in the gradient substituted during the backward pass.
+All four use the same hard spike in the forward pass and differ in the gradient used during the backward pass.
 
-For example, the Exponential surrogate uses:
-
-```text
-g(x) = α exp(-β |x|)
-```
-
-The current experiment selects:
+For example:
 
 ```python
 surrogate = "exponential"
 ```
 
-**Intention:** isolate the surrogate-gradient component of SNN training so that different gradient approximations can be investigated independently of the rest of the speech-enhancement architecture.
+selects the Exponential surrogate gradient.
+
+**Intention:** provide the additional surrogate-gradient implementations required to investigate the effect of different gradient approximations on SNN-based speech enhancement.
 
 ---
 
 ## How the Files Work Together
 
+The relationship between the repository components is:
+
 ```text
-                  Main Notebook
+              Reference / Clean Notebooks
                        │
-                       │ builds and trains
                        ▼
-                NSNet2-based model
+              NSNet2-based Architecture
                        │
-                       │ uses
+                       ▼
+                SpArch SNN model
+                       │
+                       │
+              Thesis experimental studies
+                       │
                        ▼
              snns_with_surrogates.py
                        │
-                       │ selects
+              ┌────────┴────────┐
+              │                 │
+              ▼                 ▼
+        Neuron Models     Surrogate Gradients
+        LIF / RLIF /      Boxcar / Exponential /
+        adLIF / RadLIF    Gaussian / Multi-Gaussian
+              │                 │
+              └────────┬────────┘
                        ▼
-          ┌──────────────────────────┐
-          │ Neuron:     adLIF        │
-          │ Surrogate:  Exponential  │
-          │ Threshold:  5.0          │
-          └──────────────────────────┘
+       Specific experimental configuration
                        │
-                       │ uses surrogate gradient
                        ▼
-              surrogate_gradients.py
+audio_denoising_snn_adLIF_exponential_threshold5_.ipynb
+                       │
+                       ▼
+          adLIF + Exponential + Threshold 5
 ```
 
-In other words:
+In summary:
 
-* The **notebook** defines and trains the complete speech-enhancement system.
-* `snns_with_surrogates.py` provides the configurable spiking-neuron layers used inside that system.
-* `surrogate_gradients.py` provides the gradient approximations used to train the non-differentiable spiking neurons.
+* **`audio_denoising_snn.ipynb`** is the original/reference implementation using the SpArch SNN library.
+* **`audio_denoising_thesis_faithful_clean.ipynb`** is a similar, cleaner version of that implementation.
+* **`snns_with_surrogates.py`** provides the modified/configurable SNN implementation needed for the experimental studies.
+* **`surrogate_gradients.py`** provides the surrogate-gradient implementations.
+* **`audio_denoising_snn_adLIF_exponential_threshold5_.ipynb`** combines the modified SNN implementation with the speech-enhancement pipeline for one specific reproducible configuration.
 
-This separation makes the experimental setup easier to inspect, reproduce, and modify.
+The repository therefore separates the **reference implementation**, the **experimental modifications**, and the **specific experimental configuration** rather than presenting the entire SNN implementation as original work.
 
 ---
 
 ## Connection to the Thesis Experiments
 
-The thesis investigated three aspects of the SNN-based speech-enhancement architecture:
+The thesis investigated three main experimental dimensions.
 
-### Experiment 1
+### Experiment 1 — SNN Neuron Architecture
 
-**Neuron architecture**
+Different spiking neuron models were investigated:
 
 ```text
 LIF
@@ -445,9 +501,11 @@ adLIF
 RadLIF
 ```
 
-### Experiment 2
+The objective was to investigate different spiking-neuron dynamics as replacements for the recurrent components of the NSNet2-based architecture.
 
-**Surrogate-gradient function**
+### Experiment 2 — Surrogate Gradient
+
+Different surrogate-gradient functions were investigated:
 
 ```text
 Boxcar
@@ -456,9 +514,11 @@ Gaussian
 Multi-Gaussian
 ```
 
-### Experiment 3
+The objective was to investigate how the choice of surrogate gradient used during backpropagation affects the performance of the SNN-based speech-enhancement model.
 
-**Spiking threshold**
+### Experiment 3 — Spiking Threshold
+
+Different firing thresholds were investigated:
 
 ```text
 0.05
@@ -467,9 +527,17 @@ Multi-Gaussian
 10
 ```
 
-The repository exposes these components separately so that a specific configuration can be selected without rewriting the complete speech-enhancement model.
+The objective was to investigate the sensitivity of the SNN-based architecture to the firing threshold.
 
-The current notebook provides a **specific reproducible configuration**:
+The repository provides the modified SNN and surrogate-gradient code required to configure these experimental dimensions.
+
+The notebook:
+
+```text
+src/audio_denoising_snn_adLIF_exponential_threshold5_.ipynb
+```
+
+provides one concrete example:
 
 ```text
 Neuron      : adLIF
@@ -477,7 +545,7 @@ Surrogate   : Exponential
 Threshold   : 5.0
 ```
 
-rather than automatically running every possible combination.
+This is a **specific reproducible configuration**, while the broader set of configurations investigated in the thesis is documented in the thesis itself.
 
 ---
 
@@ -487,7 +555,7 @@ The experiments use speech and noise data derived from the **VCTK** and **DEMAND
 
 The datasets themselves are **not included in this repository**.
 
-The notebook uses local/Google Colab paths for accessing the dataset, so these paths must be modified when running the project in another environment.
+The notebooks use local/Google Colab paths for accessing the dataset, so these paths need to be modified when running the project in another environment.
 
 ---
 
@@ -503,16 +571,19 @@ NSNet2 served as the starting point for the speech-enhancement architecture used
 
 ### SpArch
 
-The SNN components and neuron models are based on the **SpArch (Spiking Architectures for Speech Technology)** project from the Idiap Research Institute.
+The underlying SNN implementation and neuron models are based on **SpArch (Spiking Architectures for Speech Technology)** from the Idiap Research Institute.
 
-The SpArch framework provides implementations of the neuron models investigated in this work, including:
+The original SpArch implementation is **not claimed as original work** in this repository.
 
-* LIF
-* RLIF
-* adLIF
-* RadLIF
+The contribution of this project was the **application and experimental investigation of SNNs within an NSNet2-based speech-enhancement system**, including:
 
-The underlying NSNet2 and SpArch implementations are **not claimed as original work** in this repository. The research contribution of this project is the investigation and integration of these SNN components into an NSNet2-based speech-enhancement pipeline, together with the experimental analysis of neuron models, surrogate gradients, and spiking thresholds.
+* comparison of different SNN neuron models
+* investigation of surrogate-gradient functions
+* investigation of firing-threshold sensitivity
+* evaluation using speech-enhancement metrics
+* analysis of model complexity and parameter efficiency
+
+The modified files under `src/` support these experiments while retaining attribution to the underlying SpArch implementation.
 
 Please refer to the respective upstream repositories for their original implementations, licenses, and attribution requirements.
 
@@ -522,7 +593,7 @@ Please refer to the respective upstream repositories for their original implemen
 
 The original implementation was developed primarily in **Google Colab**.
 
-The notebook contains paths referring to local/Google Drive storage. These paths need to be changed before running the project in another environment.
+The notebooks contain paths referring to local/Google Drive storage. These paths need to be changed before running the project in another environment.
 
 The datasets and trained model checkpoints are not included in this repository.
 
