@@ -1,13 +1,10 @@
 #
 # surrogate_gradients.py
 #
-# Recreated to accompany the sparch-derived SNN codebase used in:
-#   "Audio Denoising with Spiking Neural Networks" (Nirmal S, IIT Bombay, 2025)
-#
 # The original sparch package (Bittar & Garner, 2022) only ships the Boxcar
 # surrogate (`SpikeFunctionBoxcar`). Experiment 2 of the thesis compares three
 # additional surrogate gradient functions -- Exponential, Gaussian, and
-# Multi-Gaussian -- against that Boxcar baseline. This module defines all
+# Multi-Gaussian. This module defines all
 # four as `torch.autograd.Function` subclasses with an identical interface,
 # so any of them can be swapped into the existing *Layer classes with a
 # single string argument.
