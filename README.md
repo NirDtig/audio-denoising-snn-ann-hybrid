@@ -193,7 +193,7 @@ Input Log-Power Spectrum
        Sigmoid
           │
           ▼
-    Spectral Mask
+     Spectral Mask
 ```
 
 The predicted mask is applied element-wise to the noisy complex STFT:
@@ -284,31 +284,200 @@ The main findings of the project were:
 
 ---
 
-## Repository Contents
+# Repository Contents and Code Organization
 
-The main repository currently contains the experimental notebook:
+The repository separates the **main speech-enhancement implementation**, the **SNN implementation**, and the **surrogate-gradient definitions**.
 
 ```text
 audio-denoising-snn/
 │
-├── audio_denoising_thesis_faithful_clean_no_pesq.ipynb
+├── src/
+│   ├── audio_denoising_snn_adLIF_exponential_threshold5_.ipynb
+│   ├── snns_with_surrogates.py
+│   └── surrogate_gradients.py
+│
 └── README.md
 ```
 
-The notebook contains the main implementation and experimental workflow for:
+### 1. `audio_denoising_snn_adLIF_exponential_threshold5_.ipynb`
+
+**Purpose:** Main end-to-end implementation of the audio-denoising system.
+
+This notebook is the primary entry point for the project. It brings together:
 
 * audio data loading
 * STFT preprocessing
-* NSNet2-based speech enhancement
-* SNN model construction
-* spectral-mask estimation
+* logarithmic power-spectrum features
+* NSNet2-based hybrid architecture
+* SNN layers
+* spectral-mask prediction
 * compressed complex loss
 * model training
 * validation
+* waveform reconstruction using inverse STFT
 * SNR evaluation
 * SI-SDR evaluation
 
-Additional source files can be added to the repository to expose the implementation used for the surrogate-gradient and threshold experiments in a more modular and reproducible form.
+The current notebook is configured as a **specific reproducible experiment using adLIF neurons, an Exponential surrogate gradient, and a firing threshold of 5.0**.
+
+The experimental configuration is:
+
+```python
+NEURON_TYPE = "adLIF"
+SURROGATE = "exponential"
+THRESHOLD = 5.0
+```
+
+**Intention:** provide a complete, inspectable end-to-end implementation of the speech-enhancement system and a concrete example of one experimental configuration.
+
+---
+
+### 2. `snns_with_surrogates.py`
+
+**Purpose:** SNN implementation with configurable neuron type, surrogate gradient, and firing threshold.
+
+This file contains the SNN layers used by the speech-enhancement model and exposes the experimental choices as explicit configuration parameters.
+
+The supported neuron models are:
+
+```text
+LIF
+RLIF
+adLIF
+RadLIF
+```
+
+The SNN can also select a surrogate gradient and firing threshold for a particular experiment.
+
+For example:
+
+```python
+neuron_type = "adLIF"
+surrogate = "exponential"
+threshold = 5.0
+```
+
+These parameters are passed into the SNN layers so that the same architecture can be evaluated under different experimental settings.
+
+**Intention:** keep the SNN implementation modular so that the neuron dynamics and training configuration can be changed without rewriting the NSNet2-based speech-enhancement architecture.
+
+---
+
+### 3. `surrogate_gradients.py`
+
+**Purpose:** Defines the surrogate-gradient functions used for training the spiking neurons.
+
+The forward spike-generation function is non-differentiable. During backpropagation, surrogate gradients provide an approximate derivative so that gradient-based optimization can be used.
+
+This file implements:
+
+* **Boxcar**
+* **Exponential**
+* **Gaussian**
+* **Multi-Gaussian**
+
+All four use the same hard spike in the forward pass and differ in the gradient substituted during the backward pass.
+
+For example, the Exponential surrogate uses:
+
+```text
+g(x) = α exp(-β |x|)
+```
+
+The current experiment selects:
+
+```python
+surrogate = "exponential"
+```
+
+**Intention:** isolate the surrogate-gradient component of SNN training so that different gradient approximations can be investigated independently of the rest of the speech-enhancement architecture.
+
+---
+
+## How the Files Work Together
+
+```text
+                  Main Notebook
+                       │
+                       │ builds and trains
+                       ▼
+                NSNet2-based model
+                       │
+                       │ uses
+                       ▼
+             snns_with_surrogates.py
+                       │
+                       │ selects
+                       ▼
+          ┌──────────────────────────┐
+          │ Neuron:     adLIF        │
+          │ Surrogate:  Exponential  │
+          │ Threshold:  5.0          │
+          └──────────────────────────┘
+                       │
+                       │ uses surrogate gradient
+                       ▼
+              surrogate_gradients.py
+```
+
+In other words:
+
+* The **notebook** defines and trains the complete speech-enhancement system.
+* `snns_with_surrogates.py` provides the configurable spiking-neuron layers used inside that system.
+* `surrogate_gradients.py` provides the gradient approximations used to train the non-differentiable spiking neurons.
+
+This separation makes the experimental setup easier to inspect, reproduce, and modify.
+
+---
+
+## Connection to the Thesis Experiments
+
+The thesis investigated three aspects of the SNN-based speech-enhancement architecture:
+
+### Experiment 1
+
+**Neuron architecture**
+
+```text
+LIF
+RLIF
+adLIF
+RadLIF
+```
+
+### Experiment 2
+
+**Surrogate-gradient function**
+
+```text
+Boxcar
+Exponential
+Gaussian
+Multi-Gaussian
+```
+
+### Experiment 3
+
+**Spiking threshold**
+
+```text
+0.05
+1
+5
+10
+```
+
+The repository exposes these components separately so that a specific configuration can be selected without rewriting the complete speech-enhancement model.
+
+The current notebook provides a **specific reproducible configuration**:
+
+```text
+Neuron      : adLIF
+Surrogate   : Exponential
+Threshold   : 5.0
+```
+
+rather than automatically running every possible combination.
 
 ---
 
@@ -318,7 +487,7 @@ The experiments use speech and noise data derived from the **VCTK** and **DEMAND
 
 The datasets themselves are **not included in this repository**.
 
-The notebook uses local/Google Colab paths for accessing the dataset, so these paths must be modified when running the code in another environment.
+The notebook uses local/Google Colab paths for accessing the dataset, so these paths must be modified when running the project in another environment.
 
 ---
 
