@@ -13,6 +13,7 @@ The project investigates the use of **Spiking Neural Networks (SNNs)** for real-
 **Supervisor:** Prof. Udayan Ganguly
 
 ---
+Kindly look at the Repository Contents and Code Organization section to know the code structure of this repo. The repo also contains my thesis named as Dual_Degree_Btech_plus_Mtech.pdf
 
 ## Project Overview
 
